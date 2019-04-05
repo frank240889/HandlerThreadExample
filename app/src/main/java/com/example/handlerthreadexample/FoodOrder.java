@@ -5,7 +5,10 @@ public class FoodOrder {
     private float mFoodPrice;
     private String mSideOrder;
 
+    public FoodOrder(){}
+
     public FoodOrder(String foodName, float price){
+        this();
         mFoodName = foodName;
         mFoodPrice = price;
     }

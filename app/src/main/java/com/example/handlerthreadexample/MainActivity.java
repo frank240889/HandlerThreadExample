@@ -1,6 +1,11 @@
 package com.example.handlerthreadexample;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -9,13 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Message;
-import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity implements Handler.Callback {
     private OrderHandlerThread mOrderHandlerThread;
@@ -29,18 +27,13 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        mUiHandler = new Handler(this);
-        mOrderHandlerThread = new OrderHandlerThread(mUiHandler);
-        mOrderHandlerThread.start();
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "Startting orders...", Snackbar.LENGTH_LONG)
                         .setAction("Ok", null).show();
-                mFoodRunnable = new FoodRunnable(mOrderHandlerThread);
-                mFoodRunnable.setMaxOrderSize(20);
-                mFoodRunnable.run();
+                mOrderHandlerThread.sendOrder(new FoodOrder());
             }
         });
         mFoodOrderAdapter = new FoodOrderAdapter();
@@ -53,12 +46,15 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
     @Override
     protected void onStart() {
         super.onStart();
-
+        mUiHandler = new Handler(this);
+        mOrderHandlerThread = new OrderHandlerThread(mUiHandler);
+        mOrderHandlerThread.start();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        mUiHandler.removeCallbacks(null);
         mOrderHandlerThread.quit();
     }
 

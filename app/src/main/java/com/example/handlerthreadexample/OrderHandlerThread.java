@@ -45,11 +45,17 @@ public class OrderHandlerThread extends HandlerThread {
                 super.handleMessage(msg);
 
                 FoodOrder foodOrder = (FoodOrder) msg.obj;
+                foodOrder.setFoodname(attachSideOrder());
                 foodOrder.setFoodPrice(convertConcurrency(foodOrder.getFoodPrice()));
                 foodOrder.setSideOrder(attachSideOrder());
                 Message processedMessage = new Message();
                 processedMessage.obj = foodOrder;
-                mUiHandler.sendMessage(processedMessage);
+                try {
+                    Thread.sleep(1000);
+                    mUiHandler.sendMessage(processedMessage);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         };
     }
