@@ -10,6 +10,14 @@ import android.view.View;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -31,9 +39,36 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Startting orders...", Snackbar.LENGTH_LONG)
-                        .setAction("Ok", null).show();
-                mOrderHandlerThread.sendOrder(new FoodOrder());
+                /*Snackbar.make(view, "Startting orders...", Snackbar.LENGTH_LONG)
+                        .setAction("Ok", null).show();*/
+                /*mOrderHandlerThread.sendOrder(new FoodOrder());*/
+                ExecutorService simpleExecutor = Executors.newSingleThreadExecutor();
+                simpleExecutor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<Callable<String>> tasks = new ArrayList<>();
+                        tasks.add(new Callable<String>() {
+                            public String call() {
+                                return getFirstDataFromNetwork();
+                            }
+                        });
+                        tasks.add(new Callable<String>() {
+                            public String call() {
+                                return getSecondDataFromNetwork();
+                            }
+                        });
+                        ExecutorService executor = Executors.newFixedThreadPool(2);
+                        try {
+                            List<Future<String>> futures = executor.invokeAll(tasks);
+                            String mashedData = mashupResult(futures);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } catch (ExecutionException e) {
+                            e.printStackTrace();
+                        }
+                        executor.shutdown();
+                    }
+                });
             }
         });
         mFoodOrderAdapter = new FoodOrderAdapter();
@@ -41,6 +76,32 @@ public class MainActivity extends AppCompatActivity implements Handler.Callback 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mRecyclerView.setAdapter(mFoodOrderAdapter);
 
+    }
+
+
+    private String getFirstDataFromNetwork() {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return "first call";
+    }
+    private String getSecondDataFromNetwork() {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return "second call";
+    }
+
+    private String mashupResult(List<Future<String>> futures)
+            throws ExecutionException, InterruptedException {
+        for (Future<String> future : futures) {
+            future.get();
+        }
+        return "mashhed data";
     }
 
     @Override
